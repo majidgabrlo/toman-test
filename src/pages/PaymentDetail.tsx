@@ -39,7 +39,7 @@ const PaymentDetail = () => {
             >
               &#8592;
             </div>
-            <div className="font-bold text-2xl">{data?.status}</div>
+            <div className="font-bold text-2xl">{data?.type}</div>
           </div>
 
           <div className="mx-auto space-y-3 border rounded-lg p-3">
