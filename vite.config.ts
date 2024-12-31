@@ -11,15 +11,7 @@ export default defineConfig({
     },
   },
   server: {
-    proxy: {
-      // Proxy API requests starting with /api to the backend server
-      '/api': {
-        target: 'http://localhost:8000', // Your backend API
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''), // Remove /api prefix
-      },
-    },
-    cors:true,
-    port:3000
+    cors: true,
+    port: 3000,
   },
 });
