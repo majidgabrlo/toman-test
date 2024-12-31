@@ -9,12 +9,13 @@ import Pagination from "../kit/Pagination";
 import { convertDate } from "../utils/convertDate";
 import HomePageFilters from "../components/Home/HomePageFilters";
 import Spinner from "../kit/Spinner";
-import { useEffect } from "react";
+import { ReactNode, useEffect, useMemo } from "react";
+import Button from "../kit/Button";
 
 const Home = () => {
   const [params, setParams] = useGetSearchParams<TGetAllPaymenPayload>();
 
-  const { data, isLoading, isSuccess } = useGetAllPayments({
+  const { data, isLoading, isSuccess, isError, refetch } = useGetAllPayments({
     limit: 15,
     page: Number(params.page) || 1,
     search: params.search,
@@ -22,10 +23,60 @@ const Home = () => {
     type: params.type,
   });
   useEffect(() => {
-    if (!data?.entities.length && isSuccess) {
+    console.log({ params });
+
+    if (!data?.entities.length && isSuccess && params.page !== 1) {
       setParams({ page: 1 });
     }
   }, [data, isSuccess]);
+
+  const fields: {
+    header: string;
+    data: (data: ArrayElement<TGetAllPaymentResult["entities"]>) => ReactNode;
+  }[] = useMemo(
+    () => [
+      {
+        header: "Type",
+        data(data) {
+          return <div>{data.type}</div>;
+        },
+      },
+      {
+        header: "Value",
+        data(data) {
+          return <div>{data.value}</div>;
+        },
+      },
+      {
+        header: "Status",
+        data(data) {
+          return <div>{data.status}</div>;
+        },
+      },
+      {
+        header: "Paid at",
+        headerClassName: "!col-span-3",
+        bodyClassName: "col-span-3",
+
+        data(data) {
+          return <div>{convertDate(data.paid_at)}</div>;
+        },
+      },
+      {
+        header: "Details",
+        data(data) {
+          return (
+            <div>
+              <Link className="text-blue-500" to={`/${data.id}`}>
+                See Details
+              </Link>
+            </div>
+          );
+        },
+      },
+    ],
+    []
+  );
 
   return (
     <div className="p-5">
@@ -38,9 +89,25 @@ const Home = () => {
         statusValue={params.status}
         typeValue={params.type}
       />
-      {isLoading && (
+      {isSuccess && !data?.entities?.length && (
+        <div className="font-semibold text-2xl text-center mt-12">
+          No result found
+        </div>
+      )}
+      {(isLoading || isError) && (
         <div className="flex justify-center my-8 items-center">
-          <Spinner />
+          {isLoading && <Spinner />}
+          {isError && (
+            <div className="flex flex-col items-center gap-y-1 text-2xl font-bold text-red-600">
+              <div>Something went wrong</div>
+              <Button
+                className="!bg-white text-blue-700"
+                onClick={() => refetch()}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
         </div>
       )}
       {!!data?.entities.length && (
@@ -53,47 +120,7 @@ const Home = () => {
               oddRecordClassName="bg-gray-100"
               evenClassName="bg-gray-50"
               headerClassName="py-3 border-b"
-              fields={[
-                {
-                  header: "Type",
-                  data(data) {
-                    return <div>{data.type}</div>;
-                  },
-                },
-                {
-                  header: "Value",
-                  data(data) {
-                    return <div>{data.value}</div>;
-                  },
-                },
-                {
-                  header: "Status",
-                  data(data) {
-                    return <div>{data.status}</div>;
-                  },
-                },
-                {
-                  header: "Paid at",
-                  headerClassName: "!col-span-3",
-                  bodyClassName: "col-span-3",
-
-                  data(data) {
-                    return <div>{convertDate(data.paid_at)}</div>;
-                  },
-                },
-                {
-                  header: "Details",
-                  data(data) {
-                    return (
-                      <div>
-                        <Link className="text-blue-500" to={`/${data.id}`}>
-                          See Details
-                        </Link>
-                      </div>
-                    );
-                  },
-                },
-              ]}
+              fields={fields}
             />
           </div>
           <Pagination

@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { Fragment, ReactNode } from "react";
+import { Fragment, memo, ReactNode } from "react";
 
 type Field<T> = {
   header: string;
@@ -78,4 +78,4 @@ function GridTable<T>({
   );
 }
 
-export default GridTable;
+export default memo(GridTable) as typeof GridTable;
